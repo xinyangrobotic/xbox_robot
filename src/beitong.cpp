@@ -14,10 +14,27 @@ void callback(const sensor_msgs::Joy::ConstPtr& Joy, ros::Publisher& pub)
     geometry_msgs::Twist v;
     if(Joy->buttons[ton1] && Joy->buttons[ton2] )
     {
-        v.linear.x =(Joy->axes[axis_lin]+Joy->axes[1])*vlinear;
-        v.angular.z =(Joy->axes[axis_ang]+Joy->axes[0])*vangular;
-        ROS_INFO("linear:%.3lf   angular:%.3lf",v.linear.x,v.angular.z);
-        pub.publish(v);
+        float score = 0.15;
+        float l_x = Joy->axes[axis_lin]+Joy->axes[1];
+        float a_z = Joy->axes[axis_ang]+Joy->axes[0];
+        if((Joy->axes[axis_lin] < score)
+        && (Joy->axes[axis_ang] < score)
+        && (Joy->axes[1] < score)
+        && (Joy->axes[0] < score)){
+            v.linear.x = 0;
+            v.angular.z = 0;
+            ROS_INFO("linear:%.3lf   angular:%.3lf", v.linear.x, v.angular.z);
+            pub.publish(v);
+        } else{
+            v.linear.x = l_x * vlinear;
+            v.angular.z = a_z * vangular;
+            ROS_INFO("linear:%.3lf   angular:%.3lf", v.linear.x, v.angular.z);
+            pub.publish(v);
+        }
+    } else{
+        v.linear.x = 0;
+        v.angular.z = 0;
+
     }
 
 }
@@ -28,8 +45,8 @@ int main(int argc,char** argv) {
     ros::NodeHandle n;
     ros::Subscriber sub;
     ros::Publisher pub;
-    n.param<int>("axis_linear",axis_lin,1);
-    n.param<int>("axis_angular",axis_ang,0);
+    n.param<int>("axis_linear",axis_lin,4);
+    n.param<int>("axis_angular",axis_ang,3);
     n.param<double>("vel_linear",vlinear,1);
     n.param<double>("vel_angular",vangular,1);
     n.param<int>("button1",ton1,4);
